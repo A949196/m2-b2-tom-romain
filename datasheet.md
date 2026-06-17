@@ -4,15 +4,16 @@
 > **Modèle Gebru et al. (2018), 7 sections, 2 pages max.**
 > Signée binôme.
 
-**Auteurs** : <prénom1>, <prénom2>
-**Date** : <date>
+**Auteurs** : Tom, Romain
+**Date** : 17/06/2026
 **Version** : v1.0.0
 
 ## 1. Motivation
 
 > Pourquoi ce dataset existe ? Qui l'a créé ?
 
-- ...
+- Le socle du dataset est un jeu de données **Adult**, qui classe le revenu à partir de variables du recensement américain.
+- Il a été **enrichi pour Athéna RH** avec des commentaires manager synthétiques contenant des PII non maîtrisées.
 
 ## 2. Composition
 
@@ -22,10 +23,10 @@
 
 | Aspect | Valeur |
 |---|---|
-| Nombre de lignes | ... |
+| Nombre de lignes | 32 561 |
 | Nombre de colonnes | 16 (14 features UCI + cible `income` + `manager_comments` synthétique) |
 | Cible | `income` : `<=50K` / `>50K` |
-| Distribution cible | ... |
+| Distribution cible | <=50K: 75.6 % / >50K: 24.4 % |
 | Variables sensibles | `sex`, `race`, `native_country`, `marital_status` |
 
 **Schéma des colonnes** :
@@ -47,8 +48,20 @@
 | `manager_comments` | str | Texte libre **avec PII** — à anonymiser en async |
 
 **Résumé verdict éthique** :
-- DI le plus problématique : ...
-- Intersectionnalités notables : ...
+- DI le plus problématique :
+| Variable | DI | Verdict |
+|---|---|---|
+| sex | 0.358 | ALERTE — femmes très désavantagées |
+| race | 0.347 | ALERTE — groupes non-blancs désavantagés |
+| native_country (USA/non-USA) | 0.804 | Cas limite |
+| sex × race (intersection) | 0.164 | CRITIQUE — femmes Black et Other SR ≈ 0.06 |
+ 
+Le biais le plus problématique est l'intersection sex × race (DI = 0.164).
+
+- Intersectionnalités notables :
+    - sex x race : les femmes issues de minorités raciales ont un taux d'accès aux revenus >50K environ bien inférieur à celui des hommes blancs. Ce biais est invisible lorsqu'on examine sex et race séparément.
+    - relationship x sex : car dans relationship il y a les valeurs `Husband` et `Wife` qui sont forcément `Male` et `Female`
+
 
 ## 3. Processus de collecte
 
