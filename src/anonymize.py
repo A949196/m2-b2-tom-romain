@@ -43,8 +43,17 @@ def anonymize_comments(text: str) -> str:
     """
     if not isinstance(text, str):
         return ""
+    
+    # 1 — Complément regex (spaCy ne détecte ni email ni IBAN partiel ni tel)
+    #
+    # Appliqué en premier : si on hash PERSON avant, un faux positif spaCy sur un nombre isolé (ex. "3503" mal étiqueté PERSON sur
+    # "account ****3503") consomme les chiffres avant que IBAN_PARTIAL_RE n'ait eu la chance de matcher "****3503" en entier. Observé en test
+    # réel : "****3503" → "****[PERSON_xxxx]" au lieu de "[IBAN]".
+    text = EMAIL_RE.sub("[EMAIL]", text)
+    text = PHONE_RE.sub("[PHONE]", text)
+    text = IBAN_PARTIAL_RE.sub("[IBAN]", text)
  
-    # 1 — Détection des entités avec spaCy (PERSON) → stratégie HASH
+    # 2 — Détection des entités avec spaCy (PERSON) → stratégie HASH
     doc = NLP(text)
     persons = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
  
@@ -52,13 +61,6 @@ def anonymize_comments(text: str) -> str:
     # les positions des entités suivantes pendant l'itération sur doc.ents.
     for name in persons:
         text = text.replace(name, f"[PERSON_{_hash(name)}]")
- 
-    # 2 — Complément regex (spaCy ne détecte ni email ni IBAN partiel ni tel)
-    # → stratégie SUPPRESSION
-    text = EMAIL_RE.sub("[EMAIL]", text)
-    text = PHONE_RE.sub("[PHONE]", text)
-    text = IBAN_PARTIAL_RE.sub("[IBAN]", text)
- 
     return text
 
 
